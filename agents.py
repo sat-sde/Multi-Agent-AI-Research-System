@@ -12,12 +12,21 @@ load_dotenv()
 # Support both local .env and Streamlit Cloud secrets
 def get_secret(key: str) -> str:
     try:
-        return st.secrets[key]
+        val = st.secrets.get(key, "")
+        if val:
+            return val
     except Exception:
-        return os.getenv(key, "")
+        pass
+    return os.getenv(key, "")
+
+# Validate required keys before initializing
+google_api_key = get_secret("GOOGLE_API_KEY")
+if not google_api_key:
+    st.error("⚠️ GOOGLE_API_KEY is missing. Go to Manage App → Settings → Secrets and add your API keys.")
+    st.stop()
 
 #model setup (Google Gemini 2.5 Flash - free tier)
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0, google_api_key=get_secret("GOOGLE_API_KEY"))
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0, google_api_key=google_api_key)
 
 
 #1st agent 
